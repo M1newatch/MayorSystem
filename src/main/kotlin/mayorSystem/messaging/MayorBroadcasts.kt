@@ -64,11 +64,7 @@ object MayorBroadcasts {
     }
 
     private fun footerText(): String {
-        return if (commandRoot == "mayor") {
-            "Use /mayor for more info!"
-        } else {
-            "Use /$commandRoot for more info! (/mayor also works)"
-        }
+        return mayorBroadcastFooter(commandRoot)
     }
 
     private fun applyPapi(p: Player, raw: String): String {
@@ -144,3 +140,6 @@ object MayorBroadcasts {
         }
     }
 }
+
+internal fun mayorBroadcastFooter(commandRoot: String): String =
+    "Use /$commandRoot for more info!"

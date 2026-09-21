@@ -2,7 +2,6 @@ title:
   name: "Mayor"
   # Dynamic root alias derived from title.name (example: /king -> /mayor).
   # Disabled automatically if the alias conflicts with reserved/common commands.
-  # /mayor always remains available as the guaranteed fallback command.
   command_alias_enabled: true
   player_prefix: "<gold><bold>%title_name%</bold></gold>"
   # If true, MayorSystem applies/removes the group below for the elected player.

@@ -201,11 +201,6 @@ class MayorCommands(
         val root = displayCommandRoot()
         val titleName = plugin.settings.titleName
         val titleNameMini = MiniMessageSafety.escapeUntrustedMiniMessage(titleName)
-        val fallback = if (root == "mayor") {
-            emptyList()
-        } else {
-            listOf("<dark_gray>Fallback:</dark_gray> <gray>/mayor always works too.</gray>")
-        }
 
         player.sendMessage(Component.empty())
         player.sendMessage(mini.deserialize("<gradient:#f7971e:#ffd200><bold>$titleNameMini Help</bold></gradient> <dark_gray>/</dark_gray> <white>Election tools</white>"))
@@ -216,7 +211,6 @@ class MayorCommands(
         player.sendMessage(helpCommandLine("/$root vote", "Browse candidates and cast your vote."))
         player.sendMessage(helpCommandLine("/$root candidate", "Edit your profile, bio, and custom perks."))
         player.sendMessage(helpCommandLine("/$root stepdown", "Leave the race, or step down if enabled."))
-        fallback.forEach { line -> player.sendMessage(mini.deserialize(line)) }
         player.sendMessage(mini.deserialize("<dark_gray>--------------------------------</dark_gray>"))
         player.sendMessage(mini.deserialize("<dark_gray>MayorSystem by</dark_gray> <gradient:#00c6ff:#0072ff>L1cked</gradient>"))
         player.sendMessage(Component.empty())

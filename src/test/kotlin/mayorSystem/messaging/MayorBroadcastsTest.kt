@@ -28,6 +28,11 @@ class MayorBroadcastsTest {
         assertEquals("Use /mayor for more info!", footerText())
     }
 
+    @Test
+    fun `enabled alias footer does not advertise mayor fallback`() {
+        assertEquals("Use /emperor for more info!", mayorBroadcastFooter("emperor"))
+    }
+
     private fun footerText(): String {
         val method = MayorBroadcasts::class.java.getDeclaredMethod("footerText")
         method.isAccessible = true
