@@ -23,6 +23,7 @@ import mayorSystem.elections.TermService
 import mayorSystem.hologram.LeaderboardHologramService
 import mayorSystem.integration.economy.VaultEconomyProvider
 import mayorSystem.integration.permissions.LuckPermsPermissionGroupProvider
+import mayorSystem.integration.text.NexoTextIntegration
 import mayorSystem.messaging.ChatPrompts
 import mayorSystem.messaging.MayorBroadcasts
 import mayorSystem.monitoring.AuditService
@@ -68,12 +69,14 @@ class MayorRuntime(private val plugin: MayorPlugin) {
     private var termRunnerTaskId: Int = -1
     private var papiExpansion: MayorPlaceholderExpansion? = null
     private var apiService: MayorSystemApiImpl? = null
+    private val nexoText = NexoTextIntegration(plugin)
 
     fun isReady(): Boolean = readyState == ReadyState.READY
 
     fun isLoading(): Boolean = readyState == ReadyState.LOADING
 
     fun enable() {
+        nexoText.enable()
         plugin.saveDefaultConfig()
         services.mainDispatcher = PaperMainDispatcher(plugin)
         services.scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -122,6 +125,7 @@ class MayorRuntime(private val plugin: MayorPlugin) {
     }
 
     fun disable() {
+        nexoText.disable()
         listenerRegistrar.unregisterApiService(apiService)
         apiService = null
         stopTermRunner()

@@ -80,6 +80,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://repo.lucko.me/")
+    maven("https://repo.nexomc.com/releases")
 }
 
 java {
@@ -112,6 +113,10 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.12.2")
     // LuckPerms API (optional, for elected mayor username prefix)
     compileOnly("net.luckperms:api:5.5")
+    // Optional glyph API; the installed Nexo plugin owns glyphs, fonts and spacing.
+    compileOnly("com.nexomc:nexo:1.29.1") { isTransitive = false }
+    // Public type returned by Nexo's Shift.fontProvider (same version as Nexo's API POM).
+    compileOnly("team.unnamed:creative-api:1.15.3") { isTransitive = false }
 
     // Runtime libraries are declared in plugin.yml for the slim Spigot upload jar.
     // Shadow can still build an optional -all jar for local/offline testing.
@@ -142,6 +147,8 @@ dependencies {
     testImplementation("io.mockk:mockk:1.14.9")
     testImplementation("me.clip:placeholderapi:2.12.2")
     testImplementation("net.luckperms:api:5.5")
+    testImplementation("com.nexomc:nexo:1.29.1") { isTransitive = false }
+    testImplementation("team.unnamed:creative-api:1.15.3") { isTransitive = false }
 }
 
 tasks.processResources {

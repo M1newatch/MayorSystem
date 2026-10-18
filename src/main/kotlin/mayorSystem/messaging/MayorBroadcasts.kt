@@ -4,7 +4,6 @@ import mayorSystem.platform.paper.command.CommandAliasSafety
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
@@ -21,7 +20,7 @@ import java.lang.reflect.Method
  */
 object MayorBroadcasts {
 
-    private val mini = MiniMessage.miniMessage()
+    private val mini = DisplayTextParser.miniMessage()
     @Volatile
     private var titleName: String = "Mayor"
     @Volatile

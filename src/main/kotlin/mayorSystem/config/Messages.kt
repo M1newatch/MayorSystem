@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.configuration.file.YamlConfiguration
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.minimessage.MiniMessage
+import mayorSystem.messaging.DisplayTextParser
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
@@ -17,7 +17,7 @@ import java.util.logging.Level
 class Messages(private val plugin: MayorPlugin) {
     private val file = File(plugin.dataFolder, "messages.yml")
     @Volatile private var holder: ConfigHolder = ConfigHolder(YamlConfiguration(), YamlConfiguration())
-    private val mini = MiniMessage.miniMessage()
+    private val mini = DisplayTextParser.miniMessage()
     private val papiSetPlaceholders: Method? = runCatching {
         val cls = Class.forName("me.clip.placeholderapi.PlaceholderAPI")
         runCatching {

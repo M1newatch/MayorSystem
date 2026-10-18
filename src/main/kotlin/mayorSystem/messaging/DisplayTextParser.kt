@@ -1,7 +1,12 @@
 package mayorSystem.messaging
 
+import mayorSystem.integration.text.GlyphTextProvider
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.Context
+import net.kyori.adventure.text.minimessage.tag.Tag
+import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import java.util.Collections
@@ -10,12 +15,23 @@ import java.util.Locale
 
 /**
  * Pure display-text parser for trusted MayorSystem display config and
- * integration-provided legacy text. It does not touch Bukkit or plugin state.
+ * integration-provided legacy text. Optional glyph handling stays behind a provider.
  */
 object DisplayTextParser {
     private const val MAX_CACHE_SIZE = 512
 
-    private val mini = MiniMessage.miniMessage()
+    @Volatile
+    private var glyphProvider: GlyphTextProvider? = null
+    // Bedrock conversion edits component children; serialized virtual tags would retain their original glyphs.
+    private val mini = MiniMessage.builder().emitVirtuals(false).editTags { tags ->
+        tags.resolver(object : TagResolver {
+            override fun has(name: String): Boolean =
+                glyphProvider?.takeIf { it.available }?.resolver?.has(name) == true
+
+            override fun resolve(name: String, arguments: ArgumentQueue, context: Context): Tag? =
+                glyphProvider?.takeIf { it.available }?.resolver?.resolve(name, arguments, context)
+        })
+    }.build()
     private val legacyAmpersand = LegacyComponentSerializer.builder()
         .character('&')
         .hexColors()
@@ -44,12 +60,21 @@ object DisplayTextParser {
         val text = raw.trim()
         if (text.isBlank()) return Component.empty()
         val key = CacheKey(text, parseMiniMessage)
-        componentCache[key]?.let { return it }
+        // Nexo owns live glyph definitions. A glyph reload must affect the next render.
+        val cacheable = glyphProvider?.available != true
+        if (cacheable) componentCache[key]?.let { return it }
 
-        val compatibleText = if (parseMiniMessage) NexoGlyphText.javaMini(text) else text
-        val parsed = parseComponent(compatibleText, parseMiniMessage) ?: Component.text(text)
-        componentCache[key] = parsed
+        val parsed = parseComponent(text, parseMiniMessage) ?: Component.text(text)
+        if (cacheable) componentCache[key] = parsed
         return parsed
+    }
+
+    /** Shared trusted-template parser. Only Nexo's glyph and shift tags are added. */
+    fun miniMessage(): MiniMessage = mini
+
+    internal fun useGlyphProvider(provider: GlyphTextProvider?) {
+        glyphProvider = provider
+        componentCache.clear()
     }
 
     fun mini(raw: String, parseMiniMessage: Boolean = true): String =
@@ -62,17 +87,20 @@ object DisplayTextParser {
         plain(component(raw, parseMiniMessage))
 
     fun plain(component: Component): String =
-        NexoGlyphText.readablePlain(plainSerializer.serialize(component)).trim()
+        plainSerializer.serialize(readable(component)).trim()
 
     /**
      * Adapts an already-rendered title to the current client without changing
-     * normal menu text. Bedrock receives readable rank labels instead of Java
+     * normal menu text. Bedrock receives readable glyph IDs instead of Java
      * resource-pack glyph codepoints.
      */
     fun inventoryTitle(component: Component, bedrock: Boolean): Component {
         if (!bedrock) return component
-        return component(NexoGlyphText.bedrockMini(mini(component)))
+        return readable(component)
     }
+
+    private fun readable(component: Component): Component =
+        glyphProvider?.takeIf { it.available }?.readable(component) ?: component
 
     fun legacyAmpersand(raw: String, parseMiniMessage: Boolean = true): String =
         legacyAmpersand.serialize(component(raw, parseMiniMessage))
@@ -100,9 +128,7 @@ object DisplayTextParser {
     }
 
     private fun deserializeMiniSafely(text: String): Component? {
-        val component = runCatching { mini.deserialize(text) }.getOrNull() ?: return null
-        val renderedPlain = plainSerializer.serialize(component)
-        return component.takeUnless { miniLikeTagPattern.containsMatchIn(renderedPlain) }
+        return runCatching { mini.deserialize(text) }.getOrNull()
     }
 
     private fun normalizeAmpersandHex(text: String): String =

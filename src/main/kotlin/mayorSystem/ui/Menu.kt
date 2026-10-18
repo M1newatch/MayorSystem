@@ -7,7 +7,6 @@ import mayorSystem.messaging.MiniMessageSafety
 import mayorSystem.platform.paper.BedrockPlayerDetector
 import mayorSystem.service.ActionResult
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
@@ -39,7 +38,7 @@ enum class UiClickSound {
 }
 
 abstract class Menu(protected val plugin: MayorPlugin) {
-    protected val mm = MiniMessage.miniMessage()
+    protected val mm = DisplayTextParser.miniMessage()
 
     abstract val title: Component
     abstract val rows: Int
