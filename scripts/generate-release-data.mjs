@@ -29,7 +29,7 @@ async function latestRelease() {
     headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   }
 
-  const response = await fetch('https://api.github.com/repos/L1cked/MayorSystem/releases/latest', { headers });
+  const response = await fetch('https://api.github.com/repos/Louguerrier22/MayorSystem/releases/latest', { headers });
   if (!response.ok) {
     throw new Error(`GitHub releases API returned ${response.status}`);
   }
@@ -41,8 +41,8 @@ async function main() {
     version: project.version,
     name: `MayorSystem ${project.version}`,
     publishedAt: null,
-    releaseUrl: 'https://github.com/L1cked/MayorSystem/releases/latest',
-    pluginJarUrl: 'https://github.com/L1cked/MayorSystem/releases/latest',
+    releaseUrl: 'https://github.com/Louguerrier22/MayorSystem/releases/latest',
+    pluginJarUrl: 'https://github.com/Louguerrier22/MayorSystem/releases/latest',
     apiJarUrl,
     source: 'fallback',
   };

@@ -4,7 +4,7 @@ MayorSystem has a DeepWiki steering file at `.devin/wiki.json`.
 
 Use it to compare the generated, code-aware wiki with the repository docs:
 
-- [DeepWiki for MayorSystem](https://deepwiki.com/L1cked/MayorSystem)
+- [DeepWiki for MayorSystem](https://deepwiki.com/Louguerrier22/MayorSystem)
 - [Repository docs](README.md)
 
 The repository docs are the stable server-owner and addon-developer reference. DeepWiki is useful for architecture exploration because it can summarize source files, implementation boundaries, and code relationships.

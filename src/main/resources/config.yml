@@ -9,7 +9,7 @@ title:
   # Usually the only external setup needed is LuckPerms meta-formatting plus
   # any prefix/meta you want on this group.
   # Step-by-step guide:
-  # https://github.com/L1cked/MayorSystem/blob/main/docs/LUCKPERMS_SETUP.md
+  # https://github.com/Louguerrier22/MayorSystem/blob/main/docs/LUCKPERMS_SETUP.md
   username_group_enabled: true
   username_group: "mayor_current"
   chat_prefix: "<gold><bold>%title_name%</bold></gold> <dark_gray>>></dark_gray> "

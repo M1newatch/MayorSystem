@@ -7,7 +7,7 @@ MayorSystem is a fully customizable Paper 1.21.4+ mayor election plugin for serv
 ![Status Badge](https://img.shields.io/badge/status-active-brightgreen)
 ![Paper Badge](https://img.shields.io/badge/paper-1.21.4%2B-blue)
 ![Java Badge](https://img.shields.io/badge/java-21-orange)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/L1cked/MayorSystem)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Louguerrier22/MayorSystem)
 
 ## Features
 - Scheduled election terms with configurable vote windows.
@@ -62,7 +62,7 @@ Optional plugins and MayorSystem addons are auto-detected when installed. Most i
 Most day-to-day setup is available in game. Missing config, message, and GUI keys are restored on startup/reload without overwriting custom values.
 
 ## Documentation
-- [Official website](https://l1cked.github.io/MayorSystem/)
+- [Official website](https://louguerrier22.github.io/MayorSystem/)
 - [Full docs hub](docs/README.md)
 - [Commands](docs/commands/README.md)
 - [Permissions](docs/permissions.md)

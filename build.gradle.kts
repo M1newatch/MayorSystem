@@ -241,12 +241,12 @@ publishing {
             pom {
                 name.set("MayorSystem API")
                 description.set("Public addon API for MayorSystem.")
-                url.set("https://github.com/L1cked/MayorSystem")
+                url.set("https://github.com/Louguerrier22/MayorSystem")
 
                 licenses {
                     license {
                         name.set("MIT License")
-                        url.set("https://github.com/L1cked/MayorSystem/blob/main/LICENSE")
+                        url.set("https://github.com/Louguerrier22/MayorSystem/blob/main/LICENSE")
                     }
                 }
 
@@ -260,7 +260,7 @@ publishing {
                 scm {
                     connection.set("scm:git:https://github.com/L1cked/MayorSystem.git")
                     developerConnection.set("scm:git:ssh://git@github.com/L1cked/MayorSystem.git")
-                    url.set("https://github.com/L1cked/MayorSystem")
+                    url.set("https://github.com/Louguerrier22/MayorSystem")
                 }
             }
         }

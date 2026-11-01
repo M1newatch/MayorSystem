@@ -5,13 +5,13 @@
   "java": "Java 21",
   "_apiCoordinateComment": "Only bump apiCoordinate after manually running the publish-maven-central-api GitHub Actions workflow for that version.",
   "apiCoordinate": "io.github.louguerrier22:mayorsystem-api:1.1.5",
-  "website": "https://l1cked.github.io/MayorSystem/",
-  "repository": "https://github.com/L1cked/MayorSystem",
+  "website": "https://louguerrier22.github.io/MayorSystem/",
+  "repository": "https://github.com/Louguerrier22/MayorSystem",
   "discord": "https://discord.gg/e3h8RAAs6G",
   "spigot": "https://www.spigotmc.org/resources/mayorsystem.132472/",
   "spigotUpdate": "https://www.spigotmc.org/resources/mayorsystem.132472/update?update=639873",
-  "deepWiki": "https://deepwiki.com/L1cked/MayorSystem",
-  "deepWikiAddonApi": "https://deepwiki.com/L1cked/MayorSystem/7-addon-api",
-  "systemSellAddon": "https://github.com/L1cked/SystemSellAddon",
-  "systemSkyblockStyleAddon": "https://github.com/L1cked/SystemSkyblockStyleAddon"
+  "deepWiki": "https://deepwiki.com/Louguerrier22/MayorSystem",
+  "deepWikiAddonApi": "https://deepwiki.com/Louguerrier22/MayorSystem/7-addon-api",
+  "systemSellAddon": "https://github.com/Louguerrier22/SystemSellAddon",
+  "systemSkyblockStyleAddon": "https://github.com/Louguerrier22/SystemSkyblockStyleAddon"
 }
