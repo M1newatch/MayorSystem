@@ -125,7 +125,7 @@ dependencies {
     // Cloud v2
     // NOTE: Cloud v2 "standard" parsers live in cloud-core (transitive via cloud-paper),
     // so we DON'T need a separate cloud-parser-standard dependency.
-    val cloudVersion = "2.0.0-beta.15"
+    val cloudVersion = "2.0.1"
     implementation(platform("org.incendo:cloud-minecraft-bom:$cloudVersion"))
     implementation("org.incendo:cloud-paper:$cloudVersion")
 
