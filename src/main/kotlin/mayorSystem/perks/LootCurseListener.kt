@@ -49,7 +49,7 @@ class LootCurseListener(private val plugin: MayorPlugin) : Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     fun onPerksApplied(event: MayorPerksAppliedEvent) {
-        activeModifier = modifierFor(event.perkIds)
+        activeModifier = modifierFor(event.activePerkIds)
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

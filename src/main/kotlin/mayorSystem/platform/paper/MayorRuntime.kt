@@ -26,6 +26,7 @@ import mayorSystem.integration.economy.VaultEconomyProvider
 import mayorSystem.integration.permissions.LuckPermsPermissionGroupProvider
 import mayorSystem.integration.text.NexoTextIntegration
 import mayorSystem.messaging.ChatPrompts
+import mayorSystem.perks.LootCurseListener
 import mayorSystem.messaging.MayorBroadcasts
 import mayorSystem.monitoring.AuditService
 import mayorSystem.monitoring.HealthService
