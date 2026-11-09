@@ -103,6 +103,40 @@ class AdminPerkSectionMenu(plugin: MayorPlugin, private val sectionId: String) :
             }
         }
 
+        val minRaw = plugin.config.getInt("$base.pick_min_limit", 0)
+        val minItem = icon(
+            Material.TARGET,
+            "<yellow>Perk minimum:</yellow> <white>${if (minRaw <= 0) "None" else minRaw.toString()}</white>",
+            listOf(
+                "<gray>Min perks that MUST be picked from this section.</gray>",
+                "<gray>Sum of minimums must stay <= perks_per_term.</gray>",
+                "",
+                "<gray>Left:</gray> <white>+1</white>",
+                "<gray>Right:</gray> <white>-1</white>",
+                "<gray>Shift-Left:</gray> <white>+5</white>",
+                "<gray>Shift-Right:</gray> <white>+10</white>"
+            )
+        )
+        inv.setItem(7, minItem)
+        setConfirm(7, minItem) { p, click ->
+            val current = plugin.config.getInt("$base.pick_min_limit", 0).coerceIn(0, 99)
+            val next = when (click) {
+                ClickType.SHIFT_LEFT -> current + 5
+                ClickType.SHIFT_RIGHT -> current + 10
+                ClickType.LEFT -> current + 1
+                ClickType.RIGHT -> (current - 1).coerceAtLeast(0)
+                else -> current
+            }.coerceIn(0, 99)
+            plugin.scope.launch(plugin.mainDispatcher) {
+                dispatchResult(
+                    p,
+                    plugin.adminUseCases.perks.updatePerkConfig(p, "$base.pick_min_limit", next, "admin.perks.section_updated", mapOf("section" to sectionId, "state" to if (enabled) "ENABLED" else "DISABLED")),
+                    denyOnNonSuccess = true
+                )
+                plugin.gui.open(p, AdminPerkSectionMenu(plugin, sectionId))
+            }
+        }
+
         val perks = plugin.perks.perksForSection(sectionId, includeDisabled = true)
         if (perks.isNotEmpty()) {
             val slots = contentSlots(inv)

@@ -8,7 +8,14 @@ data class PerkCatalogEntry(
 
 data class PerkSectionRule(
     val sectionId: String,
-    val pickLimit: Int?
+    /** Upper bound for picks in this section; null = unlimited (0 in config). */
+    val pickLimit: Int?,
+    /**
+     * Lower bound for picks in this section; > 0 makes the section mandatory.
+     * The sum of all minima must never exceed the term's allowed pick count or
+     * no valid selection exists (guarded by HealthService).
+     */
+    val pickMin: Int = 0
 )
 
 data class PerkSelectionInput(
@@ -24,6 +31,7 @@ sealed class PerkSelectionResult {
     data class UnknownPerks(val ids: Set<String>) : PerkSelectionResult()
     data class DisabledPerks(val ids: Set<String>) : PerkSelectionResult()
     data class SectionLimitExceeded(val sectionId: String, val limit: Int, val selected: Int) : PerkSelectionResult()
+    data class SectionMinimumNotMet(val sectionId: String, val min: Int, val selected: Int) : PerkSelectionResult()
 }
 
 class PerkSelectionPolicy {
@@ -43,7 +51,7 @@ class PerkSelectionPolicy {
             .toSet()
         if (disabled.isNotEmpty()) return PerkSelectionResult.DisabledPerks(disabled)
 
-        val sectionLimits = input.sectionRules
+        val maxLimits = input.sectionRules
             .mapNotNull { rule -> rule.pickLimit?.takeIf { it >= 0 }?.let { rule.sectionId to it } }
             .toMap()
 
@@ -57,10 +65,20 @@ class PerkSelectionPolicy {
             counts[sectionId] = (counts[sectionId] ?: 0) + 1
         }
 
+        // Max limits fail first: they tell the candidate which section to slim down.
         for ((sectionId, selected) in counts) {
-            val limit = sectionLimits[sectionId] ?: continue
+            val limit = maxLimits[sectionId] ?: continue
             if (selected > limit) {
                 return PerkSelectionResult.SectionLimitExceeded(sectionId, limit, selected)
+            }
+        }
+
+        // Then minimums: which mandatory section is still missing.
+        for (rule in input.sectionRules) {
+            val min = rule.pickMin.takeIf { it > 0 } ?: continue
+            val selected = counts[rule.sectionId] ?: 0
+            if (selected < min) {
+                return PerkSelectionResult.SectionMinimumNotMet(rule.sectionId, min, selected)
             }
         }
 

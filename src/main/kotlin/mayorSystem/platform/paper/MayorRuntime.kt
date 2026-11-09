@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import mayorSystem.MayorPlugin
+import java.time.Instant
 import mayorSystem.application.usecase.AdminUseCases
 import mayorSystem.config.GuiTexts
 import mayorSystem.config.Messages
@@ -109,6 +110,7 @@ class MayorRuntime(private val plugin: MayorPlugin) {
         services.mayorNpc = MayorNpcService(plugin)
         services.showcase = ShowcaseService(plugin)
         services.leaderboardHologram = LeaderboardHologramService(plugin)
+        services.lootCurse = LootCurseListener(plugin)
 
         listenerRegistrar.registerStartupListeners()
         services.mayorUsernamePrefix.onEnable()
@@ -245,6 +247,15 @@ class MayorRuntime(private val plugin: MayorPlugin) {
                 services.perks.rebuildActiveEffectsForTerm(-1)
             }
         }
+        if (services.hasLootCurse()) {
+            // Perk config may have changed (e.g. drop_modifier kept active via admin config edits).
+            val lootTerm = if (services.settings.isDisabled(SystemGateOption.PERKS)) {
+                -1
+            } else {
+                services.termService.computeCached(Instant.now()).second
+            }
+            services.lootCurse.refreshForTerm(lootTerm)
+        }
         if (services.settings.isDisabled(SystemGateOption.MAYOR_NPC)) {
             if (services.hasMayorNpc()) {
                 services.mayorNpc.forceUpdateMayorForTerm(-1)
@@ -343,6 +354,9 @@ class MayorRuntime(private val plugin: MayorPlugin) {
                     services.termService.computeNow().first
                 }
                 services.perks.rebuildActiveEffectsForTerm(termForEffects)
+                if (services.hasLootCurse()) {
+                    services.lootCurse.refreshForTerm(termForEffects)
+                }
 
                 updateTermRunnerState()
                 readyState = ReadyState.READY

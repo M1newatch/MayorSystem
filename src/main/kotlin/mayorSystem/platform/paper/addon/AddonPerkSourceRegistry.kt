@@ -118,6 +118,7 @@ class AddonPerkSourceRegistry(
         if (cfg.getConfigurationSection(base) == null) {
             cfg.set("$base.enabled", section.enabled)
             cfg.set("$base.pick_limit", section.pickLimit.coerceAtLeast(0))
+            cfg.set("$base.pick_min_limit", section.pickMinLimit.coerceIn(0, 99))
             cfg.set("$base.display_name", section.displayName)
             cfg.set("$base.icon", section.icon)
             cfg.set("$base.perks", linkedMapOf<String, Any>())

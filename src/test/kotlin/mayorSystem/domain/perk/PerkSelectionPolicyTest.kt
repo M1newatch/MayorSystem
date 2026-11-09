@@ -52,6 +52,75 @@ class PerkSelectionPolicyTest {
         )
     }
 
+    // ---- pick_min_limit (mandatory sections) ----
+
+    @Test
+    fun `minimum picks are enforced`() {
+        val withMin = listOf(
+            PerkSectionRule("farming", pickLimit = null, pickMin = 1),
+            PerkSectionRule("mining", pickLimit = 1)
+        )
+        // Missing the mandatory farming pick entirely (custom perk fills the slot instead).
+        assertEquals(
+            PerkSelectionResult.SectionMinimumNotMet("farming", min = 1, selected = 0),
+            policy.evaluate(
+                PerkSelectionInput(
+                    selectedPerkIds = setOf("ore", "bonus".custom()),
+                    requiredTotal = 2,
+                    catalog = catalog,
+                    sectionRules = withMin
+                )
+            )
+        )
+        // One farm perk satisfies it.
+        assertEquals(
+            PerkSelectionResult.Allowed,
+            policy.evaluate(
+                PerkSelectionInput(
+                    selectedPerkIds = setOf("wheat", "bonus".custom()),
+                    requiredTotal = 2,
+                    catalog = catalog,
+                    sectionRules = withMin
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `max violations report before minimum violations`() {
+        val withMin = listOf(
+            PerkSectionRule("farming", pickLimit = null, pickMin = 1)
+        )
+        // A max violation anywhere is reported first (candidate removes overflow first).
+        val mining = listOf(
+            PerkSectionRule("farming", pickLimit = null, pickMin = 1),
+            PerkSectionRule("mining", pickLimit = 1)
+        )
+        assertEquals(
+            PerkSelectionResult.SectionLimitExceeded("mining", limit = 1, selected = 2),
+            policy.evaluate(
+                PerkSelectionInput(
+                    selectedPerkIds = setOf("ore", "coal"),
+                    requiredTotal = 2,
+                    catalog = catalog,
+                    sectionRules = mining
+                )
+            )
+        )
+        // With limits intact, only the minimum violation surfaces: mandatory farming not picked.
+        assertEquals(
+            PerkSelectionResult.SectionMinimumNotMet("farming", min = 1, selected = 0),
+            policy.evaluate(
+                PerkSelectionInput(
+                    selectedPerkIds = setOf("ore", "bonus".custom()),
+                    requiredTotal = 2,
+                    catalog = catalog,
+                    sectionRules = withMin
+                )
+            )
+        )
+    }
+
     private fun input(selected: Set<String>, requiredTotal: Int = selected.size): PerkSelectionInput =
         PerkSelectionInput(
             selectedPerkIds = selected,

@@ -4,6 +4,8 @@ data class MayorPerkSection(
     val id: String,
     val enabled: Boolean,
     val pickLimit: Int,
+    /** Mandatory minimum picks per selection. 0 = optional (recommended default for addons). */
+    val pickMinLimit: Int = 0,
     val displayName: String,
     val icon: String,
     val perks: List<MayorPerkDefinition>

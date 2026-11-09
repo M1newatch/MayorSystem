@@ -295,11 +295,11 @@ class AdminElectionCommandActions(
             )
         }
 
-        val violations = plugin.perks.sectionLimitViolations(perks)
+        val violations = plugin.perks.sectionPickViolations(perks)
         if (violations.isNotEmpty()) {
-            val summary = violations.joinToString(", ") { "${it.first} (${it.second})" }
+            val summary = violations.joinToString(", ") { it.describe(adminFacing = true) }
             return@withContext ActionResult.Rejected(
-                "admin.perks.section_limit_violation",
+                if (violations.any { it.isMinimum }) "admin.perks.section_minimum_violation" else "admin.perks.section_limit_violation",
                 mapOf("sections" to summary)
             )
         }

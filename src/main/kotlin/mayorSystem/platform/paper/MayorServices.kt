@@ -16,6 +16,7 @@ import mayorSystem.messaging.ChatPrompts
 import mayorSystem.monitoring.AuditService
 import mayorSystem.monitoring.HealthService
 import mayorSystem.npc.MayorNpcService
+import mayorSystem.perks.LootCurseListener
 import mayorSystem.perks.PerkService
 import mayorSystem.platform.paper.addon.AddonPerkSourceRegistry
 import mayorSystem.service.ActionCoordinator
@@ -41,6 +42,7 @@ class MayorServices {
     lateinit var electionRepository: ElectionRepository
     lateinit var gui: GuiManager
     lateinit var perks: PerkService
+    lateinit var lootCurse: LootCurseListener
     lateinit var economy: EconomyHook
     lateinit var economyProvider: EconomyProvider
     lateinit var permissionGroups: PermissionGroupProvider
@@ -82,6 +84,7 @@ class MayorServices {
     fun hasScope(): Boolean = this::scope.isInitialized
     fun hasSettings(): Boolean = this::settings.isInitialized
     fun hasPerks(): Boolean = this::perks.isInitialized
+    fun hasLootCurse(): Boolean = this::lootCurse.isInitialized
     fun hasEconomyProvider(): Boolean = this::economyProvider.isInitialized
     fun hasPermissionGroups(): Boolean = this::permissionGroups.isInitialized
     fun hasPlayerIdentities(): Boolean = this::playerIdentities.isInitialized

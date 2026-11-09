@@ -64,6 +64,7 @@ class ApplyPerksMenu(
         val session = plugin.applyFlow.getOrStart(player, term)
         val chosen = session.chosenPerks
         val sectionLimit = plugin.perks.sectionPickLimit(sectionId)
+        val sectionMin = plugin.perks.sectionPickMin(sectionId)
         val sectionSelected = plugin.perks.countSelectedInSection(chosen, sectionId)
 
         inv.setItem(
@@ -73,7 +74,18 @@ class ApplyPerksMenu(
                 g("menus.apply_perks.header.name", mapOf("selected" to chosen.size.toString(), "allowed" to allowed.toString())),
                 buildList {
                     add(g("menus.apply_perks.header.lore.section", mapOf("section" to sectionId)))
-                    if (sectionLimit != null) {
+                    if (sectionMin > 0) {
+                        add(
+                            g(
+                                "menus.apply_perks.header.lore.section_rules",
+                                mapOf(
+                                    "selected" to sectionSelected.toString(),
+                                    "min" to sectionMin.toString(),
+                                    "limit" to (sectionLimit?.toString() ?: "∞")
+                                )
+                            )
+                        )
+                    } else if (sectionLimit != null) {
                         add(
                             g(
                                 "menus.apply_perks.header.lore.section_limit",

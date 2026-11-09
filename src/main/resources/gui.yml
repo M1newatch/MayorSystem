@@ -452,6 +452,7 @@ menus:
       lore:
         section: <dark_gray>Section:</dark_gray> <white>%section%</white>
         section_limit: <gray>Section limit:</gray> <white>%selected%/%limit%</white>
+        section_rules: <gray>Section rules:</gray> <white>%selected%</white> <dark_gray>(mind. %min%, max %limit%)</dark_gray>
     perk:
       progress: <dark_gray>Selected:</dark_gray> <white>%selected%/%allowed%</white>
       selected_prefix: '<green>✓</green> '

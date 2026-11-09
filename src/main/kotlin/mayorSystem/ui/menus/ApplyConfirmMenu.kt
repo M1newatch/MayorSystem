@@ -183,10 +183,11 @@ class ApplyConfirmMenu(plugin: MayorPlugin) : Menu(plugin) {
                     return@trySerialized
                 }
 
-                val violations = plugin.perks.sectionLimitViolations(chosen)
+                val violations = plugin.perks.sectionPickViolations(chosen)
                 if (violations.isNotEmpty()) {
-                    val summary = violations.joinToString(", ") { "${it.first} (${it.second})" }
-                    denyMsg(player, "public.perk_section_violation", mapOf("sections" to summary))
+                    val summary = violations.joinToString(", ") { it.describe(adminFacing = false) }
+                    val key = if (violations.any { it.isMinimum }) "public.perk_section_minimum" else "public.perk_section_violation"
+                    denyMsg(player, key, mapOf("sections" to summary))
                     plugin.gui.open(player, ApplySectionsMenu(plugin))
                     return@trySerialized
                 }

@@ -154,6 +154,19 @@ class HealthService(private val plugin: MayorPlugin) {
             )
         }
 
+        // Mandatory section picks sanity: if the sum of per-section minima exceeds the
+        // allowed total for a normal term, candidates can never submit a valid selection.
+        val minSum = plugin.perks.totalConfiguredMinima()
+        if (minSum > plugin.settings.perksPerTerm) {
+            out += HealthCheck(
+                id = "perks.min_picks_unreachable",
+                severity = HealthSeverity.ERROR,
+                title = "Section minimums exceed perks_per_term",
+                details = listOf("Sum of pick_min_limit: $minSum", "perks_per_term: ${plugin.settings.perksPerTerm}"),
+                suggestion = "Lower some perks.sections.*.pick_min_limit or raise term.perks_per_term."
+            )
+        }
+
         // Icon validity (warn if invalid material keys in config).
         val sec = plugin.config.getConfigurationSection("perks.sections")
         if (sec != null) {

@@ -6,6 +6,7 @@ import mayorSystem.platform.paper.api.MayorSystemApiImpl
 import mayorSystem.platform.paper.command.CloudBootstrap
 import mayorSystem.platform.paper.command.TitleCommandAliasListener
 import mayorSystem.papi.MayorPlaceholderExpansion
+import mayorSystem.perks.LootCurseListener
 import mayorSystem.perks.PerkJoinListener
 import mayorSystem.util.loggedTask
 import org.bukkit.event.EventHandler
@@ -27,6 +28,9 @@ class PaperListenerRegistrar(
         plugin.server.pluginManager.registerEvents(services.gui, plugin)
         plugin.server.pluginManager.registerEvents(services.prompts, plugin)
         plugin.server.pluginManager.registerEvents(PerkJoinListener(plugin), plugin)
+        if (services.hasLootCurse()) {
+            plugin.server.pluginManager.registerEvents(services.lootCurse, plugin)
+        }
         plugin.server.pluginManager.registerEvents(services.updateNotifier, plugin)
         plugin.server.pluginManager.registerEvents(services.mayorUsernamePrefix, plugin)
         plugin.server.pluginManager.registerEvents(services.displayRewardTags, plugin)

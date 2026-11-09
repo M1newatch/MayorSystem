@@ -32,12 +32,44 @@ data class PerkDef(
     val onEnd: List<String>,
     val sectionId: String,
     val origin: PerkOrigin,
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+    /**
+     * Optional loot nerf for "curse" perks (e.g. the VAT curse).
+     * Probability [0..1] that a single loot entry still drops while this perk
+     * is active for the term. Null = not a loot-curse perk.
+     */
+    val dropModifier: Double? = null
 )
 
 enum class PerkOrigin {
     INTERNAL,
     EXTERNAL
+}
+
+/**
+ * One section rule miss in a perk selection.
+ * Either the section maximum was exceeded (max violation), or a configured
+ * `pick_min_limit` was not met (minimum violation).
+ */
+data class SectionPickViolation(
+    val sectionId: String,
+    val count: Int,
+    /** Meaningful for max violations: the exceeded limit (null for minimum violations). */
+    val limit: Int? = null,
+    /** Meaningful for minimum violations: the unmet minimum (null for max violations). */
+    val min: Int? = null
+) {
+    val isMinimum: Boolean get() = limit == null
+
+    /** Human-readable short form. Admin-facing = English, player-facing = German. */
+    fun describe(adminFacing: Boolean): String = when {
+        isMinimum && adminFacing -> "$sectionId min $min (picked $count)"
+        isMinimum -> "$sectionId mind. $min (gewählt $count)"
+        adminFacing -> "$sectionId max $limit (picked $count)"
+        else -> "$sectionId max $limit (gewählt $count)"
+    }
+
+    override fun toString(): String = describe(adminFacing = true)
 }
 
 class PerkService(private val plugin: MayorPlugin) {
@@ -162,6 +194,26 @@ class PerkService(private val plugin: MayorPlugin) {
         return if (raw <= 0) null else raw
     }
 
+    /** Lower bound per section; > 0 makes the section mandatory ("curse tax"). */
+    fun sectionPickMin(sectionId: String): Int {
+        val key = normalizeSectionId(sectionId)
+        return plugin.config.getInt("perks.sections.$key.pick_min_limit", 0).coerceIn(0, 99)
+    }
+
+    /** All configured per-section minima, keyed by normalized section id. */
+    private fun sectionMinima(): Map<String, Int> {
+        val out = linkedMapOf<String, Int>()
+        val sec = plugin.config.getConfigurationSection("perks.sections") ?: return out
+        for (sectionId in sec.getKeys(false)) {
+            val min = sectionPickMin(sectionId)
+            if (min > 0) out[normalizeSectionId(sectionId).lowercase()] = min
+        }
+        return out
+    }
+
+    /** Sum of all configured per-section minima (used by the health check). */
+    fun totalConfiguredMinima(): Int = sectionMinima().values.sum()
+
     fun sectionIdForPerk(perkId: String): String? {
         if (perkId.startsWith("custom:", ignoreCase = true)) return "custom"
         return presetPerks()[perkId]?.sectionId
@@ -175,19 +227,33 @@ class PerkService(private val plugin: MayorPlugin) {
         }
     }
 
-    fun sectionLimitViolations(perks: Set<String>): List<Pair<String, Int>> {
+    /**
+     * All section-rule violations for a candidate's perk selection:
+     * max violations (pick_limit exceeded) and min violations (pick_min_limit unmet).
+     * Max violations come first; the UI shows them one-by-one as the candidate fixes them.
+     */
+    fun sectionPickViolations(perks: Set<String>): List<SectionPickViolation> {
         val counts = mutableMapOf<String, Int>()
         for (perkId in perks) {
             val sec = sectionIdForPerk(perkId) ?: continue
-            val key = normalizeSectionId(sec)
+            val key = normalizeSectionId(sec).lowercase()
             counts[key] = (counts[key] ?: 0) + 1
         }
 
-        val violations = mutableListOf<Pair<String, Int>>()
+        val violations = mutableListOf<SectionPickViolation>()
+
         for ((sec, count) in counts) {
             val limit = sectionPickLimit(sec) ?: continue
-            if (count > limit) violations += (sec to limit)
+            if (count > limit) violations += SectionPickViolation(sec, count, limit, null)
         }
+
+        // Mandatory sections may also be violated by NOT being picked at all.
+        val minima = sectionMinima()
+        for ((sec, min) in minima) {
+            val count = counts[sec] ?: 0
+            if (count < min) violations += SectionPickViolation(sec, count, null, min)
+        }
+
         return violations
     }
 
@@ -724,6 +790,8 @@ class PerkService(private val plugin: MayorPlugin) {
                 val iconMat = runCatching { Material.valueOf(iconKey) }.getOrDefault(Material.CHEST)
                 val onStart = plugin.config.getStringList("$base.on_start")
                 val onEnd = plugin.config.getStringList("$base.on_end")
+                val rawDropModifier = plugin.config.getDouble("$base.drop_modifier", 0.0)
+                val dropModifier = if (rawDropModifier > 0.0) rawDropModifier.coerceIn(0.01, 1.0) else null
 
                 out[perkId] = PerkDef(
                     id = perkId,
@@ -735,7 +803,8 @@ class PerkService(private val plugin: MayorPlugin) {
                     onEnd = onEnd,
                     sectionId = sectionId,
                     origin = PerkOrigin.INTERNAL,
-                    enabled = enabled
+                    enabled = enabled,
+                    dropModifier = dropModifier
                 )
             }
         }
@@ -849,12 +918,12 @@ class PerkService(private val plugin: MayorPlugin) {
                 val reqId = perkId.substringAfter("custom:").toIntOrNull() ?: continue
                 val req = requestsById[reqId] ?: continue
                 if (req.status != RequestStatus.APPROVED) continue
-                runCommands(req.onStart, suppressSayBroadcast = true)
+                runCommands(term, req.onStart, suppressSayBroadcast = true)
                 continue
             }
 
             val def = preset[perkId] ?: continue
-            runCommands(def.onStart, suppressSayBroadcast = true)
+            runCommands(term, def.onStart, suppressSayBroadcast = true)
         }
 
         if (!suppressSayBroadcast) {
@@ -902,12 +971,12 @@ class PerkService(private val plugin: MayorPlugin) {
                 val reqId = perkId.substringAfter("custom:").toIntOrNull() ?: continue
                 val req = snapshot.requestsById[reqId] ?: continue
                 if (req.status != RequestStatus.APPROVED) continue
-                runCommands(req.onEnd, suppressSayBroadcast = true)
+                runCommands(term, req.onEnd, suppressSayBroadcast = true)
                 continue
             }
 
             val def = preset[perkId] ?: continue
-            runCommands(def.onEnd, suppressSayBroadcast = true)
+            runCommands(term, def.onEnd, suppressSayBroadcast = true)
         }
 
         // Safety: if a perk forgot to include an onEnd effect clear, don't leave leftovers.
@@ -972,14 +1041,37 @@ class PerkService(private val plugin: MayorPlugin) {
         syncActiveEffectsToOnlinePlayers()
     }
 
-    private fun runCommands(cmds: List<String>, suppressSayBroadcast: Boolean = false) {
+    /**
+     * Mayor placeholders for personalized perks (e.g. "petty cash"):
+     * - %mayor_name%  -> winner name of the term, if known
+     * - %mayor_uuid%  -> winner UUID
+     * Commands containing an unresolved %mayor_* placeholder are skipped with a
+     * console warning (e.g. mayor offline, name unknown). Config is admin-authored,
+     * so no escaping is applied here.
+     */
+    private fun substituteMayorPlaceholders(input: String, term: Int): String? {
+        if (!input.contains("%mayor_")) return input
+        val uuid = plugin.store.winner(term)
+        val name = uuid?.let { Bukkit.getOfflinePlayer(it).name }
+        if (uuid == null || name == null) {
+            plugin.logger.warning("Perk command skipped: %mayor_* placeholder unresolved for term $term: $input")
+            return null
+        }
+        return input.replace("%mayor_name%", name).replace("%mayor_uuid%", uuid.toString())
+    }
+
+    private fun runCommands(term: Int, cmds: List<String>, suppressSayBroadcast: Boolean = false) {
         val consoleCommandsEnabled = plugin.config.getBoolean("perks.command_execution.enable_console_commands", true)
         val allowedDangerousRoots = plugin.config.getStringList("perks.command_execution.allow_roots")
             .mapNotNull { commandRoot(it) }
             .toSet()
-        for (cmd in cmds) {
-            val trimmed = cmd.trim()
+        for (rawCmd in cmds) {
+            val cleaned = substituteMayorPlaceholders(rawCmd.trim(), term) ?: continue
+            val trimmed = cleaned.trim()
             if (trimmed.isBlank()) continue
+
+            // Skip commands that still reference an unresolved %mayor_* placeholder.
+            if (Regex("%mayor_(name|uuid)%").containsMatchIn(trimmed)) continue
 
             // Avoid Brigadier limits and give us join-sync for effect perks.
             if (handlePotionEffectCommand(trimmed)) continue

@@ -235,18 +235,34 @@ perks:
     allow_roots: []
 
   sections:
-    effects:
+    # Per-section rules:
+    #   pick_limit      — max perks selectable from this section (0 = unlimited)
+    #   pick_min_limit  — min perks that MUST be picked from this section (0 = optional).
+    #                     Sum of all minima must stay <= term.perks_per_term (health check enforced).
+    # Per-perk extras:
+    #   drop_modifier   — optional loot-curse probability [0.01..1.0]: chance a single
+    #                     lore entry still drops while the perk is active (e.g. 0.81
+    #                     = the mayor's 19% VAT). Only applies to mob-kill loot.
+    # --- Hafercraft catalog ---------------------------------------------------
+    # Candidates must pick at least one boon AND one curse per term
+    # (pick_min_limit = 1 on both sides). Exactly 8 enabled perks per side;
+    # the rest sits on a disabled bench. Everything is console-command based
+    # (potion effects via the interceptor, gamerules, give/xp) and safe with
+    # perks.command_execution.allow_roots = [].
+    boons:
       enabled: true
-      pick_limit: 0   # 0 = unlimited
-      display_name: "<gradient:#00d2ff:#3a7bd5>Effects</gradient>"
+      pick_limit: 0      # 0 = unlimited
+      pick_min_limit: 1  # at least one boon per term (mandatory side A)
+      display_name: "<gradient:#43cea2:#185a9d>Segnungen</gradient>"
       icon: "POTION"
       perks:
-        # Safe-ish "always on" buffs (infinite)
         speed_1:
-          display_name: "<aqua>Speed I</aqua>"
+          enabled: true
+          display_name: "<aqua>Tempo I</aqua>"
           icon: "SUGAR"
           lore:
-            - "<gray>Everyone gets Speed I during the term.</gray>"
+            - "<gray>Alle Bürger erhalten Tempo I für die ganze Amtszeit.</gray>"
+            - "<dark_gray>Ein kleines Dauer-Buff mit großem Effekt.</dark_gray>"
           on_start:
             - "effect give @a minecraft:speed infinite 0 true"
           on_end:
@@ -254,113 +270,195 @@ perks:
 
         haste_1:
           enabled: true
-          display_name: "<yellow>Haste I</yellow>"
+          display_name: "<yellow>Eile I</yellow>"
           icon: "NETHERITE_PICKAXE"
           lore:
-            - "<gray>Everyone gets Haste I during the term.</gray>"
+            - "<gray>Alle Bürger erhalten Eile I für die ganze Amtszeit.</gray>"
+            - "<dark_gray>Goldene Ära des Abbaus.</dark_gray>"
           on_start:
             - "effect give @a minecraft:haste infinite 0 true"
           on_end:
             - "effect clear @a minecraft:haste"
 
-        jump_boost_1:
-          enabled: true
-          display_name: "<green>Jump Boost I</green>"
-          icon: "RABBIT_FOOT"
-          lore:
-            - "<gray>A little extra hop.</gray>"
-          on_start:
-            - "effect give @a minecraft:jump_boost infinite 0 true"
-          on_end:
-            - "effect clear @a minecraft:jump_boost"
-
         night_vision:
           enabled: true
-          display_name: "<light_purple>Night Vision</light_purple>"
+          display_name: "<light_purple>Nachtsicht</light_purple>"
           icon: "GOLDEN_CARROT"
           lore:
-            - "<gray>No darkness. Only vibes.</gray>"
+            - "<gray>Kein Gruseln im Dunkeln für die ganze Amtszeit.</gray>"
           on_start:
             - "effect give @a minecraft:night_vision infinite 0 true"
           on_end:
             - "effect clear @a minecraft:night_vision"
 
-        fire_resistance:
+        sweet_dreams:
           enabled: true
-          display_name: "<gold>Fire Resistance</gold>"
+          display_name: "<white>Süße Träume</white>"
+          icon: "RED_BED"
+          lore:
+            - "<gray>Keine Phantome während der Amtszeit.</gray>"
+            - "<dark_gray>Endlich durchschlafen.</dark_gray>"
+          on_start:
+            - "gamerule doInsomnia false"
+          on_end:
+            - "gamerule doInsomnia true"
+
+        bright_days:
+          enabled: true
+          display_name: "<yellow>Lichte Tage</yellow>"
+          icon: "SUNFLOWER"
+          lore:
+            - "<gray>Klarer Himmel, kein Wetter-Zyklus.</gray>"
+            - "<dark_gray>Nicht mit Dauerschauer kombinieren.</dark_gray>"
+          on_start:
+            - "gamerule doWeatherCycle false"
+            - "weather clear 1000000"
+          on_end:
+            - "gamerule doWeatherCycle true"
+
+        education_grant:
+          enabled: true
+          display_name: "<green>Weiterbildungszuschuss</green>"
+          icon: "EXPERIENCE_BOTTLE"
+          lore:
+            - "<gray>Alle Bürger erhalten einmalig 500 XP.</gray>"
+            - "<dark_gray>Amtsbeginn = Sparzins.</dark_gray>"
+          on_start:
+            - "xp add @a 500"
+
+        market_day:
+          enabled: true
+          display_name: "<green>Markttag</green>"
+          icon: "EMERALD"
+          lore:
+            - "<gray>Ein Wandernder Händler schaut am Rathaus vorbei.</gray>"
+            - "<dark_gray>Der Marktbesuch ist nur kurz, also sei da.</dark_gray>"
+          on_start:
+            - "execute positioned 28.5 71.0 -88.5 run summon wandering_trader"
+
+        petty_cash:
+          enabled: true
+          display_name: "<gold>Gehaltskasse</gold>"
+          icon: "CHEST"
+          lore:
+            - "<gray>Der Bürgermeister entnimmt der Kasse persönliche 8 Diamanten.</gray>"
+            - "<dark_gray>Demokratie ist die faireste Steuerumverteilung.</dark_gray>"
+          admin_lore:
+            - "Payday runs once at term start. The mayor must be online then;"
+            - "otherwise the payout is skipped (missed payday = no diamonds)."
+          on_start:
+            - "give %mayor_name% minecraft:diamond 8"
+
+        # ---- disabled bench (swap in via /mayor admin anytime) ----
+        fire_resistance:
+          enabled: false
+          display_name: "<gold>Feuerfest</gold>"
           icon: "LAVA_BUCKET"
           lore:
-            - "<gray>No more surprise lava baths.</gray>"
+            - "<gray>Keine Überraschungslaichen mehr in Lava.</gray>"
           on_start:
             - "effect give @a minecraft:fire_resistance infinite 0 true"
           on_end:
             - "effect clear @a minecraft:fire_resistance"
 
+        slow_falling:
+          enabled: false
+          display_name: "<gray>Sanfter Fall</gray>"
+          icon: "FEATHER"
+          lore:
+            - "<gray>Sicherere Elytra-Landungen.</gray>"
+          on_start:
+            - "effect give @a minecraft:slow_falling infinite 0 true"
+          on_end:
+            - "effect clear @a minecraft:slow_falling"
+
+        luck_1:
+          enabled: false
+          display_name: "<green>Glück I</green>"
+          icon: "EMERALD"
+          lore:
+            - "<gray>Bessere Loot-Rolls in manchen Kontexten.</gray>"
+          on_start:
+            - "effect give @a minecraft:luck infinite 0 true"
+          on_end:
+            - "effect clear @a minecraft:luck"
+
+        hero_of_the_village:
+          enabled: false
+          display_name: "<green>Dorfheld</green>"
+          icon: "TOTEM_OF_UNDYING"
+          lore:
+            - "<gray>Fette Rabatte bei den Dorfbewohnern.</gray>"
+            - "<dark_gray>(feurig) Standardmäßig deaktiviert.</dark_gray>"
+          on_start:
+            - "effect give @a minecraft:hero_of_the_village infinite 0 true"
+          on_end:
+            - "effect clear @a minecraft:hero_of_the_village"
+
+        jump_boost_1:
+          enabled: false
+          display_name: "<green>Sprungkraft I</green>"
+          icon: "RABBIT_FOOT"
+          lore:
+            - "<gray>Ein kleiner Extra-Hüpfer für alle.</gray>"
+          on_start:
+            - "effect give @a minecraft:jump_boost infinite 0 true"
+          on_end:
+            - "effect clear @a minecraft:jump_boost"
+
         water_breathing:
-          enabled: true
-          display_name: "<aqua>Water Breathing</aqua>"
+          enabled: false
+          display_name: "<aqua>Wasseratmung</aqua>"
           icon: "PUFFERFISH"
           lore:
-            - "<gray>Ocean-friendly citizens.</gray>"
+            - "<gray>Ozeanfreundliche Bürger.</gray>"
           on_start:
             - "effect give @a minecraft:water_breathing infinite 0 true"
           on_end:
             - "effect clear @a minecraft:water_breathing"
 
         dolphins_grace:
-          enabled: true
-          display_name: "<aqua>Dolphin's Grace</aqua>"
+          enabled: false
+          display_name: "<aqua>Gnade der Delfine</aqua>"
           icon: "HEART_OF_THE_SEA"
           lore:
-            - "<gray>Swim zoomies.</gray>"
+            - "<gray>Schwimm-Zoomies.</gray>"
           on_start:
             - "effect give @a minecraft:dolphins_grace infinite 0 true"
           on_end:
             - "effect clear @a minecraft:dolphins_grace"
 
-        slow_falling:
-          enabled: true
-          display_name: "<gray>Slow Falling</gray>"
-          icon: "FEATHER"
-          lore:
-            - "<gray>Safer elytra landings and cliffs.</gray>"
-          on_start:
-            - "effect give @a minecraft:slow_falling infinite 0 true"
-          on_end:
-            - "effect clear @a minecraft:slow_falling"
-
         glowing:
-          enabled: true
-          display_name: "<aqua>Glowing</aqua>"
+          enabled: false
+          display_name: "<aqua>Leuchten</aqua>"
           icon: "GLOW_INK_SAC"
           lore:
-            - "<gray>Everyone glows during the term.</gray>"
+            - "<gray>Alle leuchten während der Amtszeit.</gray>"
           on_start:
             - "effect give @a minecraft:glowing infinite 0 true"
           on_end:
             - "effect clear @a minecraft:glowing"
 
-        luck_1:
-          enabled: true
-          display_name: "<green>Luck I</green>"
-          icon: "EMERALD"
+        conduit_vibes:
+          enabled: false
+          display_name: "<aqua>Wasserparadies</aqua>"
+          icon: "CONDUIT"
           lore:
-            - "<gray>Better loot rolls in some contexts.</gray>"
+            - "<gray>Wasseratmung + Nachtsicht.</gray>"
           on_start:
-            - "effect give @a minecraft:luck infinite 0 true"
+            - "effect give @a minecraft:water_breathing infinite 0 true"
+            - "effect give @a minecraft:night_vision infinite 0 true"
           on_end:
-            - "effect clear @a minecraft:luck"
-
-        # Good but spicy (infinite) - disabled by default, admins can opt-in
-        # These can significantly change survival balance.
+            - "effect clear @a minecraft:water_breathing"
+            - "effect clear @a minecraft:night_vision"
 
         strength_1:
           enabled: false
-          display_name: "<red>Strength I</red> <gray>(spicy)</gray>"
+          display_name: "<red>Stärke I</red> <gray>(feurig)</gray>"
           icon: "NETHERITE_SWORD"
           lore:
-            - "<gray>More melee damage for everyone.</gray>"
-            - "<dark_gray>Disabled by default for balance.</dark_gray>"
+            - "<gray>Mehr Nahkampfschaden für alle.</gray>"
+            - "<dark_gray>Standardmäßig deaktiviert, aus Balance-Gründen.</dark_gray>"
           on_start:
             - "effect give @a minecraft:strength infinite 0 true"
           on_end:
@@ -368,11 +466,11 @@ perks:
 
         regeneration_1:
           enabled: false
-          display_name: "<light_purple>Regeneration I</light_purple> <gray>(spicy)</gray>"
+          display_name: "<light_purple>Regeneration I</light_purple> <gray>(feurig)</gray>"
           icon: "GHAST_TEAR"
           lore:
-            - "<gray>Constant regen changes PvE/PvP a lot.</gray>"
-            - "<dark_gray>Disabled by default for balance.</dark_gray>"
+            - "<gray>Dauerheilung dreht PvE und PvP.</gray>"
+            - "<dark_gray>Standardmäßig deaktiviert.</dark_gray>"
           on_start:
             - "effect give @a minecraft:regeneration infinite 0 true"
           on_end:
@@ -380,11 +478,11 @@ perks:
 
         resistance_1:
           enabled: false
-          display_name: "<blue>Resistance I</blue> <gray>(spicy)</gray>"
+          display_name: "<blue>Widerstand I</blue> <gray>(feurig)</gray>"
           icon: "SHIELD"
           lore:
-            - "<gray>Damage reduction for everyone.</gray>"
-            - "<dark_gray>Disabled by default for balance.</dark_gray>"
+            - "<gray>Weniger Schaden für alle.</gray>"
+            - "<dark_gray>Standardmäßig deaktiviert.</dark_gray>"
           on_start:
             - "effect give @a minecraft:resistance infinite 0 true"
           on_end:
@@ -392,11 +490,11 @@ perks:
 
         absorption_1:
           enabled: false
-          display_name: "<gold>Absorption I</gold> <gray>(spicy)</gray>"
+          display_name: "<gold>Absorption I</gold> <gray>(feurig)</gray>"
           icon: "GOLDEN_APPLE"
           lore:
-            - "<gray>Extra hearts for everyone.</gray>"
-            - "<dark_gray>Disabled by default for balance.</dark_gray>"
+            - "<gray>Zusätzliche Herzen für alle.</gray>"
+            - "<dark_gray>Standardmäßig deaktiviert.</dark_gray>"
           on_start:
             - "effect give @a minecraft:absorption infinite 0 true"
           on_end:
@@ -404,57 +502,158 @@ perks:
 
         health_boost_1:
           enabled: false
-          display_name: "<red>Health Boost I</red> <gray>(spicy)</gray>"
+          display_name: "<red>Lebenskraft I</red> <gray>(feurig)</gray>"
           icon: "ENCHANTED_GOLDEN_APPLE"
           lore:
-            - "<gray>Increases max health for everyone.</gray>"
-            - "<dark_gray>Disabled by default for balance.</dark_gray>"
+            - "<gray>Erhöht die Maximale Gesundheit.</gray>"
+            - "<dark_gray>Standardmäßig deaktiviert.</dark_gray>"
           on_start:
             - "effect give @a minecraft:health_boost infinite 0 true"
           on_end:
             - "effect clear @a minecraft:health_boost"
 
-        hero_of_the_village:
-          enabled: false
-          display_name: "<green>Hero of the Village</green> <gray>(spicy)</gray>"
-          icon: "TOTEM_OF_UNDYING"
-          lore:
-            - "<gray>Big discounts from villagers.</gray>"
-            - "<dark_gray>Disabled by default for balance.</dark_gray>"
-          on_start:
-            - "effect give @a minecraft:hero_of_the_village infinite 0 true"
-          on_end:
-            - "effect clear @a minecraft:hero_of_the_village"
-
         saturation:
           enabled: false
-          display_name: "<gold>Saturation</gold> <gray>(VERY spicy)</gray>"
+          display_name: "<gold>Sättigung</gold> <gray>(SEHR feurig)</gray>"
           icon: "GOLDEN_CARROT"
           lore:
-            - "<gray>Basically infinite food.</gray>"
-            - "<dark_gray>Highly disruptive. Disabled by default.</dark_gray>"
+            - "<gray>Gleich wie ein endloses Buffet.</gray>"
+            - "<dark_gray>Extrem disruptiv, standardmäßig deaktiviert.</dark_gray>"
           on_start:
             - "effect give @a minecraft:saturation infinite 0 true"
           on_end:
             - "effect clear @a minecraft:saturation"
 
-        # Bonus combo (still safe-ish): "Conduit vibes"
-        conduit_vibes:
+    curses:
+      enabled: true
+      pick_limit: 0      # 0 = unlimited
+      pick_min_limit: 1  # at least one curse per term (mandatory side B)
+      display_name: "<gradient:#c31432:#240b36>Flüche</gradient>"
+      icon: "WITHER_SKELETON_SKULL"
+      perks:
+        cursed_darkness:
           enabled: true
-          display_name: "<aqua>Conduit Vibes</aqua>"
-          icon: "CONDUIT"
+          display_name: "<dark_red>Finsternis</dark_red>"
+          icon: "PHANTOM_MEMBRANE"
           lore:
-            - "<gray>Water Breathing + Night Vision combo.</gray>"
+            - "<gray>Finsternis-Schübe für alle, die ganze Amtszeit lang.</gray>"
+            - "<dark_gray>Dienstsiegel: dunkel.</dark_gray>"
           on_start:
-            - "effect give @a minecraft:water_breathing infinite 0 true"
-            - "effect give @a minecraft:night_vision infinite 0 true"
+            - "effect give @a minecraft:darkness infinite 0 true"
           on_end:
-            - "effect clear @a minecraft:water_breathing"
-            - "effect clear @a minecraft:night_vision"
+            - "effect clear @a minecraft:darkness"
+
+        cursed_weakness:
+          enabled: true
+          display_name: "<red>Schwäche</red>"
+          icon: "NETHERITE_AXE"
+          lore:
+            - "<gray>Weniger Nahkampfschaden für alle.</gray>"
+            - "<dark_gray>Der Schaden leidet entsprechend.</dark_gray>"
+          on_start:
+            - "effect give @a minecraft:weakness infinite 0 true"
+          on_end:
+            - "effect clear @a minecraft:weakness"
+
+        cursed_hunger:
+          enabled: true
+          display_name: "<dark_green>Hunger</dark_green>"
+          icon: "ROTTEN_FLESH"
+          lore:
+            - "<gray>Alle Bürger sind hungrig: Nahrung schwindet schneller.</gray>"
+            - "<dark_gray>Vermeide große Einkäufe, trage Snacks.</dark_gray>"
+          on_start:
+            - "effect give @a minecraft:hunger infinite 0 true"
+          on_end:
+            - "effect clear @a minecraft:hunger"
+
+        cursed_unluck:
+          enabled: true
+          display_name: "<dark_gray>Pech</dark_gray>"
+          icon: "BONE"
+          lore:
+            - "<gray>Schlechtere Loot-Rolls für alle.</gray>"
+            - "<dark_gray>Reine Glückssteuer, ohne Kompromisse.</dark_gray>"
+          on_start:
+            - "effect give @a minecraft:unluck infinite 0 true"
+          on_end:
+            - "effect clear @a minecraft:unluck"
+
+        cursed_drought:
+          enabled: true
+          display_name: "<yellow>Dürre</yellow>"
+          icon: "IRON_HOE"
+          lore:
+            - "<gray>Farmen kriechen: Pflanzen wachsen sehr viel langsamer.</gray>"
+            - "<dark_gray>Wer pünktlich säen will, muss früh aufstehen.</dark_gray>"
+          on_start:
+            - "gamerule randomTickSpeed 1"
+          on_end:
+            - "gamerule randomTickSpeed 3"
+
+        cursed_vat:
+          enabled: true
+          display_name: "<gold>Mehrwertsteuer</gold>"
+          icon: "GOLD_INGOT"
+          lore:
+            - "<gray>Nur 81% des Loots landen je bei dir.</gray>"
+            - "<dark_gray>Der Bürger versteht das als Förderung des Gemeinwohls.</dark_gray>"
+          drop_modifier: 0.81
+
+        cursed_tax_audit:
+          enabled: true
+          display_name: "<dark_red>Steuerprüfung</dark_red>"
+          icon: "PAPER"
+          lore:
+            - "<gray>Finanzamt-Stichprobe: einmalig 100 XP Abgabe von jedem.</gray>"
+            - "<dark_gray>Ohne Pfand. Ohne Ausnahmen.</dark_gray>"
+          on_start:
+            - "xp add @a -100"
+
+        cursed_perma_rain:
+          enabled: true
+          display_name: "<blue>Dauerschauer</blue>"
+          icon: "WATER_BUCKET"
+          lore:
+            - "<gray>14 Tage Regen. Punkt.</gray>"
+            - "<dark_gray>Nicht mit Lichte Tage kombinieren.</dark_gray>"
+          on_start:
+            - "gamerule doWeatherCycle false"
+            - "weather rain 20000000"
+          on_end:
+            - "weather clear 1"
+            - "gamerule doWeatherCycle true"
+
+        # ---- disabled bench ----
+        cursed_water_cut:
+          enabled: false
+          display_name: "<dark_blue>Wasserregulierung</dark_blue>"
+          icon: "BLUE_DYE"
+          lore:
+            - "<gray>Unendliche Wassertröge springen nicht mehr an.</gray>"
+            - "<dark_gray>Mild, aber spürbar nervig.</dark_gray>"
+          on_start:
+            - "gamerule waterSourceConversion false"
+          on_end:
+            - "gamerule waterSourceConversion true"
+
+        cursed_eternal_monday:
+          enabled: false
+          display_name: "<dark_gray>Ewiger Montag</dark_gray>"
+          icon: "GRAY_DYE"
+          lore:
+            - "<gray>Die Sonne steht auf Mittag. Für den ganzen Term.</gray>"
+            - "<dark_gray>Komische, aber harmlose Amtsdinge.</dark_gray>"
+          on_start:
+            - "gamerule doDaylightCycle false"
+            - "time set noon"
+          on_end:
+            - "gamerule doDaylightCycle true"
 
     public_perks:
       enabled: true
       pick_limit: 0   # 0 = unlimited
+      pick_min_limit: 0 # 0 = optional
       display_name: "<gradient:#43cea2:#185a9d>Public Perks</gradient>"
       icon: "BOOK"
       perks: {}

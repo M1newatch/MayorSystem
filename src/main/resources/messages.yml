@@ -76,6 +76,7 @@ public:
   sell_bonus: "<gradient:#f7971e:#ffd200><bold>%name% Multiplier</bold></gradient> <dark_gray>>></dark_gray> %style_success%+%bonus%%style_success_end% <gray>(x%multiplier%)</gray>"
   perk_section_limit: "%style_warning%Section limit reached for <white>%section%</white> <gray>(max %limit%)</gray>.%style_warning_end%"
   perk_section_violation: "%style_warning%Section limits exceeded:%style_warning_end% <white>%sections%</white>"
+  perk_section_minimum: "%style_warning%Deine Perk-Auswahl erfüllt die Pflichtwahl nicht:%style_warning_end% <white>%sections%</white>"
   apply_ban_permanent: "%style_warning%You are permanently banned from applying to %title_name_lower% elections.%style_warning_end%"
   apply_ban_temporary: "%style_warning%You are temporarily banned from applying. Try again in %minutes% minutes.%style_warning_end%"
   apply_removed: "%style_warning%You were removed from this election and cannot re-apply this term.%style_warning_end%"
@@ -119,6 +120,7 @@ admin:
     perk_updated: "%style_success%Perk <white>%section%/%perk%</white> is now <white>%state%</white>.%style_success_end%"
     section_limit: "%style_warning%Section limit reached for <white>%section%</white> <gray>(max %limit%)</gray>.%style_warning_end%"
     section_limit_violation: "%style_warning%Section limits exceeded:%style_warning_end% <white>%sections%</white>"
+    section_minimum_violation: "%style_warning%Section minimums not met:%style_warning_end% <white>%sections%</white>"
     perk_limit: "%style_warning%You can only select %limit% perks.%style_warning_end%"
     perk_exact: "%style_warning%You must select exactly %limit% perks. (Selected: %selected%)%style_warning_end%"
   election:

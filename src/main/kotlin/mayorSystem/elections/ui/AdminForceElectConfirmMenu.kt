@@ -125,10 +125,11 @@ class AdminForceElectConfirmMenu(plugin: MayorPlugin) : Menu(plugin) {
             return
         }
 
-        val violations = plugin.perks.sectionLimitViolations(session.chosenPerks)
+        val violations = plugin.perks.sectionPickViolations(session.chosenPerks)
         if (violations.isNotEmpty()) {
-            val summary = violations.joinToString(", ") { "${it.first} (${it.second})" }
-            denyMsg(admin, "admin.perks.section_limit_violation", mapOf("sections" to summary))
+            val summary = violations.joinToString(", ") { it.describe(adminFacing = true) }
+            val key = if (violations.any { it.isMinimum }) "admin.perks.section_minimum_violation" else "admin.perks.section_limit_violation"
+            denyMsg(admin, key, mapOf("sections" to summary))
             plugin.gui.open(admin, AdminForceElectSectionsMenu(plugin))
             return
         }
