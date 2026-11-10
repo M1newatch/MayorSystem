@@ -81,7 +81,10 @@ Bump for every deploy, never roll back. `plugin.yml` picks it up via
   hard-blocked by `BLOCKED_DANGEROUS_COMMAND_ROOTS` unless listed in
   `perks.command_execution.allow_roots`.
 - `effect give @a …` commands are intercepted and become native infinite
-  effects (journeable across joins/restarts); any other command runs once at
+  effects (journeable across joins/restarts). Targeted variants with a simple
+  player-name selector (`effect give @a[name=X] …`) are intercepted the same
+  way and tracked for that one player; unsupported selectors fall through to
+  console (runs once, no cleanup). Any other command runs once at
   term start/ end. Negative potion effects are fully supported — they are a
   supported mechanism for "curse" perks.
 - Election/perk data (sqlite `elections.db`) stores chosen perk *ids*, so

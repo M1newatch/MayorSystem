@@ -18,6 +18,24 @@ Deployed to the live server (homelab, via Tailscale `homelab-ts`):
 - Verified on live: `[MayorSystem] Ready.` (1.1.10-hafercraft.1), catalog
   8 boons + 8 curses enabled, minima 1/1.
 
+## 2026-11-10 evening: verfassungsschutz added — deploy jar .2 before it is picked
+
+- The targeted boon `verfassungsschutz` (joke perk: "Bewahrung der öffentlichen
+  Ordnung" — puts Vyn3000 under 7 weakest-level potion effects for the whole
+  term) is committed on this branch (version bumped to `1.1.10-hafercraft.2`)
+  and is already written into the live config on disk (9 boons + 8 curses
+  now). The RUNNING 1.1.10 jar does not know it yet — catalog changes reach
+  the candidate menus only after a reload/restart.
+- DO NOT `/reload` (or restart with the same .1 jar) to publish the catalog:
+  the .1 jar does NOT intercept `@a[name=...]` selectors, so the perk falls
+  through to console — it runs ONCE if Vyn3000 is online at term start and is
+  NOT cleaned up if he is offline at term end (permanent curse bug).
+- Correct path: build `1.1.10-hafercraft.2` from this branch and deploy per
+  the deploy-history section below (manifest row: version + new sha256).
+  That one restart publishes both the new jar and the 9-boon catalog. Term 0
+  office starts 2026-11-11 18:47 — deploy before then, or before anyone
+  applies with the perk.
+
 STILL OPEN:
 1. Smoke test as a candidate (needs an in-game player): apply with 3 boons →
    blocked by `perk_section_minimum`; apply 1 boon + 1 curse + 1 free →
@@ -28,9 +46,16 @@ STILL OPEN:
 2. Gamerule fallbacks: verify `doInsomnia`, `doWeatherCycle`, `randomTickSpeed`
    exist on MC 26.3 after first term start (Nov 11 18:47+); swap any missing
    curse (`cursed_water_cut`/`cursed_eternal_monday` are on the disabled
-   bench).
+   bench). Also confirm the effect ids `minecraft:unluck` and
+   `minecraft:mining_fatigue` still resolve on 26.3 (luck effects were slated
+   for removal in recent vanilla versions); if one is gone, delete just that
+   command line from the perk — the rest still applies.
 3. `server/server.properties` in the parent repo is dirty — NOT from this
    session, leave to the admin.
+4. Verfassungsschutz smoke test (after jar .2 is deployed): apply with the
+   perk, join as Vyn3000 (7 weakest-level effects, particles hidden), restart
+   the server and rejoin (still applied), end the term and rejoin (all
+   cleared).
 
 ## Deploy history (how it was done, for the next time)
 
@@ -55,4 +80,3 @@ Deploy path (works from away-from-home, via Tailscale):
 3. Needs sudo interactively (`sudo` over SSH has no NOPASSWD), so run:
    `ssh -t homelab-ts 'sudo bash /home/gregor/minecraft/scripts/deploy-mayorsystem-1.1.10.sh'`
 4. Commit the parent repo (manifest, live configs, retired jar, script).
-

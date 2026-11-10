@@ -245,7 +245,7 @@ perks:
     #                     = the mayor's 19% VAT). Only applies to mob-kill loot.
     # --- Hafercraft catalog ---------------------------------------------------
     # Candidates must pick at least one boon AND one curse per term
-    # (pick_min_limit = 1 on both sides). Exactly 8 enabled perks per side;
+    # (pick_min_limit = 1 on both sides). 9 boons + 8 curses enabled;
     # the rest sits on a disabled bench. Everything is console-command based
     # (potion effects via the interceptor, gamerules, give/xp) and safe with
     # perks.command_execution.allow_roots = [].
@@ -348,6 +348,38 @@ perks:
             - "otherwise the payout is skipped (missed payday = no diamonds)."
           on_start:
             - "give %mayor_name% minecraft:diamond 8"
+
+        verfassungsschutz:
+          enabled: true
+          display_name: "<dark_green>Verfassungsschutz</dark_green>"
+          icon: "SPYGLASS"
+          lore:
+            - "<gray>Bewahrung der öffentlichen Ordnung.</gray>"
+            - "<dark_gray>Akte Vyn3000: Streng vertrauliche Überwachung während der Amtszeit.</dark_gray>"
+            - "<dark_gray>Beobachtungsstufe 1 (schwach): langsam, müde, im Dunkeln,</dark_gray>"
+            - "<dark_gray>hungrig, schwach, vergiftet und vom Pech verfolgt.</dark_gray>"
+            - "<dark_gray>Wirkt nur auf die beobachtete Person, dafür die ganze Amtszeit.</dark_gray>"
+          admin_lore:
+            - "Targets ONE player by name (currently Vyn3000)."
+            - "Simple @a[name=...] selector, intercepted and tracked:"
+            - "applies on join, survives restarts, clears even when the target"
+            - "is offline at term end. A Minecraft rename breaks it silently."
+          on_start:
+            - "effect give @a[name=Vyn3000] minecraft:slowness infinite 0 true"
+            - "effect give @a[name=Vyn3000] minecraft:mining_fatigue infinite 0 true"
+            - "effect give @a[name=Vyn3000] minecraft:darkness infinite 0 true"
+            - "effect give @a[name=Vyn3000] minecraft:hunger infinite 0 true"
+            - "effect give @a[name=Vyn3000] minecraft:weakness infinite 0 true"
+            - "effect give @a[name=Vyn3000] minecraft:poison infinite 0 true"
+            - "effect give @a[name=Vyn3000] minecraft:unluck infinite 0 true"
+          on_end:
+            - "effect clear @a[name=Vyn3000] minecraft:slowness"
+            - "effect clear @a[name=Vyn3000] minecraft:mining_fatigue"
+            - "effect clear @a[name=Vyn3000] minecraft:darkness"
+            - "effect clear @a[name=Vyn3000] minecraft:hunger"
+            - "effect clear @a[name=Vyn3000] minecraft:weakness"
+            - "effect clear @a[name=Vyn3000] minecraft:poison"
+            - "effect clear @a[name=Vyn3000] minecraft:unluck"
 
         # ---- disabled bench (swap in via /mayor admin anytime) ----
         fire_resistance:

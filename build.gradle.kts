@@ -64,7 +64,7 @@ plugins {
 }
 
 group = "mayorSystem"
-version = "1.1.10-hafercraft.1"
+version = "1.1.10-hafercraft.2"
 
 // Capture once during configuration so task actions don't reach for Task.project at execution time.
 val pluginVersion = project.version.toString()

@@ -268,6 +268,19 @@ class PerkService(private val plugin: MayorPlugin) {
      */
     private val activeGlobalEffects: LinkedHashMap<PotionEffectType, PotionEffect> = linkedMapOf()
 
+    private data class TargetedEffect(
+        val targetName: String,
+        val effect: PotionEffect
+    )
+
+    /**
+     * Targeted variant of [activeGlobalEffects], keyed by effect type.
+     * Produced by '@a[name=X]' selectors in perk commands (e.g. the Verfassungsschutz
+     * boon). Applied/tracked/cleared per player exactly like global effects, but only
+     * for players whose name matches [TargetedEffect.targetName] (case-insensitive).
+     */
+    private val activeTargetedEffects: LinkedHashMap<PotionEffectType, TargetedEffect> = linkedMapOf()
+
     /**
      * Per-player cache of what we believe we have applied.
      *
@@ -488,6 +501,71 @@ class PerkService(private val plugin: MayorPlugin) {
         }
     }
 
+    /**
+     * Parses a simple player-name selector "@a[name=SomeName]" as used by targeted
+     * perks. Returns the target name, or null for plain "@a" (handled globally) and
+     * for any unsupported selector (those fall through to console execution).
+     */
+    private fun targetedSelectorName(target: String): String? {
+        if (!target.startsWith("@a[", ignoreCase = true) || !target.endsWith("]")) return null
+        val body = target.substring(3, target.length - 1)
+        val key = body.substringBefore('=', "").trim().lowercase()
+        if (key != "name") return null
+        val name = body.substringAfter('=', "").trim()
+        if (name.isEmpty() || name.length > 16) return null
+        // Player names are [A-Za-z0-9_]; rejects compound selectors like @a[name=x,limit=1].
+        return name.takeIf { it.all { c -> c.isLetterOrDigit() || c == '_' } }
+    }
+
+    private fun activateTargetedGlobalEffect(
+        targetName: String,
+        effectId: String,
+        rawDuration: String?,
+        amplifier: Int,
+        hideParticles: Boolean
+    ) {
+        val type = potionEffectType(effectId) ?: return
+
+        val durationTicks = durationTicksForTermEffect(rawDuration)
+        val particles = !hideParticles
+        val icon = !hideParticles
+
+        val effect = PotionEffect(type, durationTicks, amplifier.coerceAtLeast(0), false, particles, icon)
+        activeTargetedEffects[type] = TargetedEffect(targetName, effect)
+        plugin.logger.info("Targeted mayor effect active: ${type.key} (amp $amplifier) -> player '$targetName'.")
+        syncActiveEffectsToOnlinePlayers()
+    }
+
+    /**
+     * Removes targeted effects for a player selected by name (the 'clear
+     * @a[name=X]' form). Tracked signatures are used so we only clear effects
+     * we applied ourselves.
+     */
+    private fun deactivateTargetedEffects(targetName: String, effectId: String?) {
+        val types: Set<PotionEffectType> = if (effectId != null) {
+            val type = potionEffectType(effectId) ?: return
+            setOf(type)
+        } else {
+            activeTargetedEffects.keys.toSet()
+        }
+
+        Bukkit.getOnlinePlayers().forEach { p ->
+            val prev = loadApplied(p)
+            for (type in types) {
+                val targeted = activeTargetedEffects[type] ?: continue
+                if (!targeted.targetName.equals(p.name, ignoreCase = true)) continue
+                val sig = prev[type]
+                val current = p.getPotionEffect(type)
+                if (sig != null && current != null && shouldClearTrackedCurrent(sig, current)) {
+                    clearPotionEffectChainWithFollowUp(p, type, sig, removeTrackingAfter = true)
+                } else if (sig != null) {
+                    saveApplied(p, prev - type)
+                }
+            }
+        }
+        types.forEach { activeTargetedEffects.remove(it) }
+    }
+
     private fun activateGlobalEffect(effectId: String, rawDuration: String?, amplifier: Int, hideParticles: Boolean) {
         val type = potionEffectType(effectId) ?: return
 
@@ -519,6 +597,7 @@ class PerkService(private val plugin: MayorPlugin) {
     private fun clearAllGlobalEffects() {
         clearBatch()
         activeGlobalEffects.clear()
+        activeTargetedEffects.clear()
 
         // Remove only the effects we previously applied (tracked in player PDC).
         Bukkit.getOnlinePlayers().forEach { p ->
@@ -550,6 +629,9 @@ class PerkService(private val plugin: MayorPlugin) {
      * Intercepts the two commands we care about so they don't crash:
      * - effect give @a minecraft:<id> <duration> <amp> <hideParticles>
      * - effect clear @a [minecraft:<id>]
+     * - targeted variants with a simple player-name selector:
+     *   effect give|clear @a[name=SomeName] [minecraft:<id>] [...]
+     * Anything else (other selector filters, unusual syntax) falls through to console.
      */
     private fun handlePotionEffectCommand(cmd: String): Boolean {
         val parts = cmd.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
@@ -559,7 +641,8 @@ class PerkService(private val plugin: MayorPlugin) {
 
         val sub = parts[1].lowercase()
         val target = parts[2]
-        if (target != "@a") return false // we only special-case global perks
+        val targetedName = targetedSelectorName(target)
+        if (target != "@a" && targetedName == null) return false // we only special-case global perks
 
         when (sub) {
             "give" -> {
@@ -567,13 +650,23 @@ class PerkService(private val plugin: MayorPlugin) {
                 val duration = parts.getOrNull(4)
                 val amplifier = parts.getOrNull(5)?.toIntOrNull() ?: 0
                 val hideParticles = parts.getOrNull(6)?.toBooleanStrictOrNull() ?: false
-                activateGlobalEffect(effectId, duration, amplifier, hideParticles)
+                if (targetedName != null) {
+                    activateTargetedGlobalEffect(targetedName, effectId, duration, amplifier, hideParticles)
+                } else {
+                    activateGlobalEffect(effectId, duration, amplifier, hideParticles)
+                }
                 return true
             }
 
             "clear" -> {
                 val effectId = parts.getOrNull(3)
-                if (effectId == null) clearAllGlobalEffects() else deactivateGlobalEffect(effectId)
+                if (targetedName != null) {
+                    deactivateTargetedEffects(targetedName, effectId)
+                } else if (effectId == null) {
+                    clearAllGlobalEffects()
+                } else {
+                    deactivateGlobalEffect(effectId)
+                }
                 return true
             }
         }
@@ -597,7 +690,13 @@ class PerkService(private val plugin: MayorPlugin) {
      * - It can clean up old "infinite" effects for players who were offline when a term ended.
      */
     fun applyActiveEffects(player: Player, force: Boolean) {
-        val desired: Map<PotionEffectType, PotionEffect> = activeGlobalEffects.toMap()
+        // Global effects apply to everyone; targeted '@a[name=...]' effects only to the
+        // named player (case-insensitive, matching Bukkit display name resolution).
+        val desired: Map<PotionEffectType, PotionEffect> =
+            activeGlobalEffects.toMap() +
+                activeTargetedEffects
+                    .filter { (_, targeted) -> targeted.targetName.equals(player.name, ignoreCase = true) }
+                    .mapValues { (_, targeted) -> targeted.effect }
 
         val prevApplied = loadApplied(player)
 
